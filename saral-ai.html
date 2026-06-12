@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saral AI — Simple Answers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Noto+Sans:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F7F4EC;
+    --paper: #FFFFFF;
+    --rule: #E3DECF;
+    --ink: #2B2B2B;
+    --muted: #7B7567;
+    --chalk-green: #2F6E4F;
+    --chalk-green-dark: #234F39;
+    --amber: #E8A33D;
+    --note: #FDEFC9;
+    --note-edge: #F2D9A1;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family: "Noto Sans","Noto Sans Devanagari","Noto Sans Bengali",sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    background: linear-gradient(135deg, var(--chalk-green), var(--chalk-green-dark));
+    color:#fff;
+    padding: 18px 20px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+  }
+  header h1{
+    margin:0;
+    font-family:"Baloo 2", sans-serif;
+    font-weight:700;
+    font-size: 24px;
+    letter-spacing:0.5px;
+  }
+  header p{
+    margin:4px 0 0;
+    font-size: 13px;
+    opacity:0.85;
+  }
+  #setup{
+    max-width: 640px;
+    margin: 24px auto;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 18px 20px;
+    width: calc(100% - 32px);
+  }
+  #setup h2{ font-size:16px; margin:0 0 8px; font-family:"Baloo 2",sans-serif; color:var(--chalk-green-dark);}
+  #setup p{ font-size: 13px; color: var(--muted); margin: 6px 0 12px; line-height:1.5;}
+  #setup input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--rule);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  #setup button{
+    margin-top:10px;
+    background: var(--chalk-green);
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:"Baloo 2",sans-serif;
+  }
+  #setup button:hover{ background: var(--chalk-green-dark); }
+
+  main{
+    flex:1;
+    overflow-y:auto;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 35px,
+      var(--rule) 36px
+    );
+    padding: 20px;
+  }
+  .msg{
+    max-width: 78%;
+    margin-bottom: 18px;
+    line-height:1.6;
+    font-size: 15px;
+    white-space: pre-wrap;
+  }
+  .msg.user{
+    margin-left:auto;
+    background: var(--note);
+    border: 1px solid var(--note-edge);
+    border-radius: 10px 10px 2px 10px;
+    padding: 10px 14px;
+    box-shadow: 1px 2px 4px rgba(0,0,0,0.06);
+  }
+  .msg.ai{
+    margin-right:auto;
+    background: var(--paper);
+    border-left: 4px solid var(--chalk-green);
+    border-radius: 4px 10px 10px 10px;
+    padding: 10px 14px;
+    box-shadow: 1px 2px 4px rgba(0,0,0,0.05);
+  }
+  .msg.ai.loading{ color: var(--muted); font-style: italic; }
+
+  form{
+    display:flex;
+    gap:10px;
+    padding: 14px 16px;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+  }
+  textarea{
+    flex:1;
+    resize:none;
+    border:1px solid var(--rule);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size:15px;
+    font-family: inherit;
+    height: 46px;
+    line-height:1.4;
+  }
+  button.send{
+    background: var(--amber);
+    color: #fff;
+    border:none;
+    border-radius: 10px;
+    padding: 0 22px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:"Baloo 2",sans-serif;
+  }
+  button.send:hover{ background:#d6912e; }
+  button.send:disabled{ opacity:0.6; cursor:default; }
+
+  .hint{
+    text-align:center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📘 Saral AI</h1>
+  <p>Simple answers in your language — study, life, anything you ask</p>
+</header>
+
+<div id="setup">
+  <h2>Step 1: Add your free Gemini API key</h2>
+  <p>Paste the API key you copied from Google AI Studio. It's saved only on this device (in your browser), never sent anywhere except to Google's AI service.</p>
+  <input type="password" id="apiKey" placeholder="Paste your API key here (starts with AIza...)">
+  <button onclick="saveKey()">Save & Start Chatting</button>
+</div>
+
+<main id="chat" style="display:none;">
+  <div class="hint">Ask me anything — studies, life, feelings. Likho Hindi, Bengali ya English mein, jaise comfortable ho. 😊</div>
+</main>
+
+<form id="form" style="display:none;" onsubmit="sendMessage(event)">
+  <textarea id="input" placeholder="Type your question here..." required></textarea>
+  <button class="send" type="submit" id="sendBtn">Send</button>
+</form>
+
+<script>
+const SYSTEM_PROMPT = `You are Saral AI, a warm and friendly assistant for students, teenagers, and adults in India.
+Your job is to explain ANYTHING the user asks — study topics, exam concepts, emotional struggles, life advice, daily problems — in the SIMPLEST possible way.
+
+Rules you always follow:
+- Reply in the SAME language/script the user wrote in (Hindi, Bengali, English, or a mix/Hinglish). Match their style naturally.
+- Use short sentences, simple words, and everyday examples. Avoid jargon; if you must use a technical term, explain it in one simple line right after.
+- For study questions: break down the explanation step by step, like a patient teacher.
+- For emotional or personal problems: be kind, supportive, and non-judgmental. Don't lecture. Validate feelings first, then gently offer practical, simple suggestions.
+- Keep answers focused and not too long — clear and easy to read, not overwhelming.
+- Be encouraging and friendly, like a helpful older sibling or favorite teacher.`;
+
+let apiKey = localStorage.getItem('saral_api_key') || '';
+let history = [];
+
+if(apiKey){ showChat(); }
+
+function saveKey(){
+  const val = document.getElementById('apiKey').value.trim();
+  if(!val){ alert('Please paste your API key first.'); return; }
+  apiKey = val;
+  localStorage.setItem('saral_api_key', apiKey);
+  showChat();
+}
+
+function showChat(){
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('chat').style.display = 'block';
+  document.getElementById('form').style.display = 'flex';
+}
+
+function addMessage(text, role){
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.textContent = text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+async function sendMessage(e){
+  e.preventDefault();
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if(!text) return;
+
+  addMessage(text, 'user');
+  history.push({ role: 'user', parts: [{ text }] });
+  input.value = '';
+
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+  const loadingMsg = addMessage('Thinking...', 'ai loading');
+
+  try{
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: history,
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
+        })
+      }
+    );
+    const data = await res.json();
+    loadingMsg.remove();
+
+    if(data.error){
+      addMessage('Error: ' + data.error.message, 'ai');
+      return;
+    }
+
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
+    addMessage(reply, 'ai');
+    history.push({ role: 'model', parts: [{ text: reply }] });
+
+  }catch(err){
+    loadingMsg.remove();
+    addMessage('Network error. Please check your internet connection and try again.', 'ai');
+  }finally{
+    sendBtn.disabled = false;
+  }
+}
+
+document.getElementById('input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    document.getElementById('form').requestSubmit();
+  }
+});
+</script>
+
+</body>
+</html>
