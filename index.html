@@ -47,39 +47,6 @@
     font-size: 13px;
     opacity:0.85;
   }
-  #setup{
-    max-width: 640px;
-    margin: 24px auto;
-    background: var(--paper);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 18px 20px;
-    width: calc(100% - 32px);
-  }
-  #setup h2{ font-size:16px; margin:0 0 8px; font-family:"Baloo 2",sans-serif; color:var(--chalk-green-dark);}
-  #setup p{ font-size: 13px; color: var(--muted); margin: 6px 0 12px; line-height:1.5;}
-  #setup input{
-    width:100%;
-    padding:10px 12px;
-    border:1px solid var(--rule);
-    border-radius:8px;
-    font-size:14px;
-    font-family:inherit;
-  }
-  #setup button{
-    margin-top:10px;
-    background: var(--chalk-green);
-    color:#fff;
-    border:none;
-    padding:10px 18px;
-    border-radius:8px;
-    font-size:14px;
-    font-weight:600;
-    cursor:pointer;
-    font-family:"Baloo 2",sans-serif;
-  }
-  #setup button:hover{ background: var(--chalk-green-dark); }
-
   main{
     flex:1;
     overflow-y:auto;
@@ -115,7 +82,6 @@
     box-shadow: 1px 2px 4px rgba(0,0,0,0.05);
   }
   .msg.ai.loading{ color: var(--muted); font-style: italic; }
-
   form{
     display:flex;
     gap:10px;
@@ -147,7 +113,6 @@
   }
   button.send:hover{ background:#d6912e; }
   button.send:disabled{ opacity:0.6; cursor:default; }
-
   .hint{
     text-align:center;
     color: var(--muted);
@@ -163,18 +128,11 @@
   <p>Simple answers in your language — study, life, anything you ask</p>
 </header>
 
-<div id="setup">
-  <h2>Step 1: Add your free Gemini API key</h2>
-  <p>Paste the API key you copied from Google AI Studio. It's saved only on this device (in your browser), never sent anywhere except to Google's AI service.</p>
-  <input type="password" id="apiKey" placeholder="Paste your API key here (starts with AIza...)">
-  <button onclick="saveKey()">Save & Start Chatting</button>
-</div>
-
-<main id="chat" style="display:none;">
+<main id="chat">
   <div class="hint">Ask me anything — studies, life, feelings. Likho Hindi, Bengali ya English mein, jaise comfortable ho. 😊</div>
 </main>
 
-<form id="form" style="display:none;" onsubmit="sendMessage(event)">
+<form id="form" onsubmit="sendMessage(event)">
   <textarea id="input" placeholder="Type your question here..." required></textarea>
   <button class="send" type="submit" id="sendBtn">Send</button>
 </form>
@@ -191,24 +149,8 @@ Rules you always follow:
 - Keep answers focused and not too long — clear and easy to read, not overwhelming.
 - Be encouraging and friendly, like a helpful older sibling or favorite teacher.`;
 
-let apiKey = localStorage.getItem('saral_api_key') || '';
+const WORKER_URL = "https://summer-dew-ffcb.prasanogiri185.workers.dev";
 let history = [];
-
-if(apiKey){ showChat(); }
-
-function saveKey(){
-  const val = document.getElementById('apiKey').value.trim();
-  if(!val){ alert('Please paste your API key first.'); return; }
-  apiKey = val;
-  localStorage.setItem('saral_api_key', apiKey);
-  showChat();
-}
-
-function showChat(){
-  document.getElementById('setup').style.display = 'none';
-  document.getElementById('chat').style.display = 'block';
-  document.getElementById('form').style.display = 'flex';
-}
 
 function addMessage(text, role){
   const chat = document.getElementById('chat');
@@ -236,7 +178,7 @@ async function sendMessage(e){
 
   try{
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      WORKER_URL,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
