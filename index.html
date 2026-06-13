@@ -282,8 +282,29 @@ Rules you always follow:
 - If the user sends a photo (e.g. of a textbook question, homework, diagram, or handwritten notes), read it carefully and explain or solve it in simple language, step by step.`;
 
 const WORKER_URL = "https://summer-dew-ffcb.prasanogiri185.workers.dev";
+const DAILY_LIMIT = 50;
 let history = [];
 let selectedImage = null; // { mimeType, base64, dataUrl, name, isImage }
+
+function getUsage(){
+  const today = new Date().toISOString().slice(0,10);
+  let usage;
+  try{
+    usage = JSON.parse(localStorage.getItem('saral_usage'));
+  }catch(e){ usage = null; }
+
+  if(!usage || usage.date !== today){
+    usage = { date: today, count: 0 };
+  }
+  return usage;
+}
+
+function incrementUsage(){
+  const usage = getUsage();
+  usage.count += 1;
+  localStorage.setItem('saral_usage', JSON.stringify(usage));
+  return usage.count;
+}
 
 function addMessage(text, role, imageDataUrl){
   const chat = document.getElementById('chat');
@@ -363,6 +384,12 @@ async function sendMessage(e){
   const text = input.value.trim();
   if(!text && !selectedImage) return;
 
+  const usage = getUsage();
+  if(usage.count >= DAILY_LIMIT){
+    addMessage(`Aapne aaj ke ${DAILY_LIMIT} messages ka limit pura kar liya hai. Kal phir try karo! 😊\n\nYou've reached today's limit of ${DAILY_LIMIT} messages. Please come back tomorrow!`, 'ai');
+    return;
+  }
+
   const parts = [];
   if(selectedImage){
     parts.push({ inline_data: { mime_type: selectedImage.mimeType, data: selectedImage.base64 } });
@@ -409,6 +436,7 @@ async function sendMessage(e){
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not generate a response.';
     addMessage(reply, 'ai');
     history.push({ role: 'model', parts: [{ text: reply }] });
+    incrementUsage();
 
   }catch(err){
     loadingRow.remove();
