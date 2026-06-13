@@ -5,19 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Saral AI — Simple Answers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Noto+Sans:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Noto+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&family=Noto+Sans+Bengali:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <style>
   :root{
-    --bg: #F7F4EC;
-    --paper: #FFFFFF;
-    --rule: #E3DECF;
-    --ink: #2B2B2B;
-    --muted: #7B7567;
-    --chalk-green: #2F6E4F;
-    --chalk-green-dark: #234F39;
-    --amber: #E8A33D;
-    --note: #FDEFC9;
-    --note-edge: #F2D9A1;
+    --bg: #FFFFFF;
+    --surface: #F7F7F8;
+    --border: #E5E5E8;
+    --ink: #2D2D33;
+    --muted: #8A8A93;
+    --accent: #10A37F;
+    --accent-dark: #0D8C6D;
+    --user-bubble: #EFF6F4;
   }
   *{ box-sizing: border-box; }
   body{
@@ -30,64 +29,119 @@
     flex-direction:column;
   }
   header{
-    background: linear-gradient(135deg, var(--chalk-green), var(--chalk-green-dark));
-    color:#fff;
-    padding: 18px 20px;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.08);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  header .logo{
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--accent);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 18px;
+    flex-shrink:0;
   }
   header h1{
     margin:0;
-    font-family:"Baloo 2", sans-serif;
+    font-family:"Poppins", sans-serif;
     font-weight:700;
-    font-size: 24px;
-    letter-spacing:0.5px;
+    font-size: 18px;
+    color: var(--ink);
   }
   header p{
-    margin:4px 0 0;
-    font-size: 13px;
-    opacity:0.85;
+    margin:0;
+    font-size: 12px;
+    color: var(--muted);
   }
   main{
     flex:1;
     overflow-y:auto;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 35px,
-      var(--rule) 36px
-    );
-    padding: 20px;
+    padding: 16px 0 8px;
   }
-  .msg{
-    max-width: 78%;
-    margin-bottom: 18px;
-    line-height:1.6;
+  .msg-row{
+    display:flex;
+    gap:10px;
+    padding: 10px 16px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .msg-row.user{ justify-content:flex-end; }
+  .avatar{
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     font-size: 15px;
-    white-space: pre-wrap;
+    background: var(--accent);
+    color:#fff;
   }
-  .msg.user{
-    margin-left:auto;
-    background: var(--note);
-    border: 1px solid var(--note-edge);
-    border-radius: 10px 10px 2px 10px;
+  .msg-row.user .avatar{ display:none; }
+  .msg{
+    line-height:1.65;
+    font-size: 15px;
+    max-width: 78%;
+  }
+  .msg-row.user .msg{
+    background: var(--user-bubble);
+    border-radius: 14px;
     padding: 10px 14px;
-    box-shadow: 1px 2px 4px rgba(0,0,0,0.06);
   }
-  .msg.ai{
-    margin-right:auto;
-    background: var(--paper);
-    border-left: 4px solid var(--chalk-green);
-    border-radius: 4px 10px 10px 10px;
-    padding: 10px 14px;
-    box-shadow: 1px 2px 4px rgba(0,0,0,0.05);
+  .msg-row.ai .msg{
+    background: transparent;
+    padding: 4px 0;
   }
-  .msg.ai.loading{ color: var(--muted); font-style: italic; }
-
   .msg img{
     max-width: 100%;
-    border-radius: 8px;
+    border-radius: 10px;
     margin-bottom: 6px;
     display:block;
+  }
+  .msg.loading{ color: var(--muted); font-style: italic; }
+
+  /* Markdown styling inside AI replies */
+  .msg p{ margin: 0 0 10px; }
+  .msg p:last-child{ margin-bottom:0; }
+  .msg ul, .msg ol{ margin: 0 0 10px; padding-left: 22px; }
+  .msg li{ margin-bottom: 4px; }
+  .msg h1, .msg h2, .msg h3{
+    font-family:"Poppins", sans-serif;
+    margin: 14px 0 8px;
+    color: var(--ink);
+  }
+  .msg h1{ font-size: 19px; }
+  .msg h2{ font-size: 17px; }
+  .msg h3{ font-size: 15px; }
+  .msg strong{ font-weight: 700; }
+  .msg code{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 13px;
+    font-family: "SFMono-Regular", Consolas, monospace;
+  }
+  .msg pre{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    overflow-x:auto;
+    margin: 0 0 10px;
+  }
+  .msg pre code{ background:none; border:none; padding:0; }
+  .msg blockquote{
+    border-left: 3px solid var(--accent);
+    margin: 0 0 10px;
+    padding-left: 12px;
+    color: var(--muted);
   }
 
   #preview-bar{
@@ -95,30 +149,32 @@
     align-items:center;
     gap:10px;
     padding: 10px 16px 0;
-    background: var(--paper);
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
   }
   #preview-bar.show{ display:flex; }
   #preview-bar img, #preview-bar .file-icon{
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
     object-fit: cover;
     border-radius: 8px;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--border);
   }
   #preview-bar .file-icon{
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size: 24px;
-    background: var(--bg);
+    font-size: 22px;
+    background: var(--surface);
   }
   #preview-bar .remove-img{
-    background: var(--rule);
-    border:none;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius:50%;
     width:24px;
     height:24px;
-    font-size:14px;
+    font-size:13px;
     cursor:pointer;
     color: var(--ink);
   }
@@ -127,62 +183,71 @@
     display:flex;
     align-items:flex-end;
     gap:8px;
-    padding: 14px 16px;
-    background: var(--paper);
-    border-top: 1px solid var(--rule);
+    padding: 12px 16px 16px;
+    max-width: 720px;
+    width:100%;
+    margin: 0 auto;
   }
   .attach-btn{
-    background: var(--bg);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    width: 46px;
-    height: 46px;
-    font-size: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    font-size: 19px;
     cursor: pointer;
     flex-shrink:0;
     display:flex;
     align-items:center;
     justify-content:center;
   }
-  .attach-btn:hover{ background: var(--rule); }
+  .attach-btn:hover{ background: var(--border); }
   textarea{
     flex:1;
     resize:none;
-    border:1px solid var(--rule);
-    border-radius: 10px;
-    padding: 10px 12px;
+    border:1px solid var(--border);
+    border-radius: 14px;
+    padding: 11px 14px;
     font-size:15px;
     font-family: inherit;
-    height: 46px;
+    height: 44px;
     line-height:1.4;
+    background: var(--surface);
   }
+  textarea:focus{ outline: 1.5px solid var(--accent); }
   button.send{
-    background: var(--amber);
+    background: var(--accent);
     color: #fff;
     border:none;
-    border-radius: 10px;
-    padding: 0 22px;
+    border-radius: 12px;
+    padding: 0 20px;
+    height: 44px;
     font-size:15px;
     font-weight:600;
     cursor:pointer;
-    font-family:"Baloo 2",sans-serif;
+    font-family:"Poppins",sans-serif;
+    flex-shrink:0;
   }
-  button.send:hover{ background:#d6912e; }
-  button.send:disabled{ opacity:0.6; cursor:default; }
+  button.send:hover{ background: var(--accent-dark); }
+  button.send:disabled{ opacity:0.5; cursor:default; }
 
   .hint{
     text-align:center;
     color: var(--muted);
     font-size: 13px;
-    margin-top: 40px;
+    margin-top: 60px;
+    padding: 0 20px;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>📘 Saral AI</h1>
-  <p>Simple answers in your language — study, life, anything you ask</p>
+  <div class="logo">📘</div>
+  <div>
+    <h1>Saral AI</h1>
+    <p>Simple answers in your language — study, life, anything you ask</p>
+  </div>
 </header>
 
 <main id="chat">
@@ -210,7 +275,7 @@ Your job is to explain ANYTHING the user asks — study topics, exam concepts, e
 Rules you always follow:
 - Reply in the SAME language/script the user wrote in (Hindi, Bengali, English, or a mix/Hinglish). Match their style naturally.
 - Use short sentences, simple words, and everyday examples. Avoid jargon; if you must use a technical term, explain it in one simple line right after.
-- For study questions: break down the explanation step by step, like a patient teacher.
+- For study questions: break down the explanation step by step, like a patient teacher. Use markdown formatting (headings, bold, bullet points) where it makes the answer clearer.
 - For emotional or personal problems: be kind, supportive, and non-judgmental. Don't lecture. Validate feelings first, then gently offer practical, simple suggestions.
 - Keep answers focused and not too long — clear and easy to read, not overwhelming.
 - Be encouraging and friendly, like a helpful older sibling or favorite teacher.
@@ -218,25 +283,47 @@ Rules you always follow:
 
 const WORKER_URL = "https://summer-dew-ffcb.prasanogiri185.workers.dev";
 let history = [];
-let selectedImage = null; // { mimeType, base64 }
+let selectedImage = null; // { mimeType, base64, dataUrl, name, isImage }
 
 function addMessage(text, role, imageDataUrl){
   const chat = document.getElementById('chat');
+
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+
+  if(role === 'ai'){
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = '📘';
+    row.appendChild(avatar);
+  }
+
   const div = document.createElement('div');
-  div.className = 'msg ' + role;
+  div.className = 'msg' + (role === 'loading' ? ' loading' : '');
+
   if(imageDataUrl){
     const img = document.createElement('img');
     img.src = imageDataUrl;
     div.appendChild(img);
   }
+
   if(text){
-    const span = document.createElement('span');
-    span.textContent = text;
-    div.appendChild(span);
+    if(role === 'ai'){
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = marked.parse(text);
+      div.appendChild(wrapper);
+    } else {
+      const span = document.createElement('span');
+      span.style.whiteSpace = 'pre-wrap';
+      span.textContent = text;
+      div.appendChild(span);
+    }
   }
-  chat.appendChild(div);
+
+  row.appendChild(div);
+  chat.appendChild(row);
   chat.scrollTop = chat.scrollHeight;
-  return div;
+  return row;
 }
 
 function handleImageSelect(event){
@@ -296,7 +383,8 @@ async function sendMessage(e){
 
   const sendBtn = document.getElementById('sendBtn');
   sendBtn.disabled = true;
-  const loadingMsg = addMessage('Thinking...', 'ai loading');
+  const loadingRow = addMessage('Thinking...', 'ai');
+  loadingRow.querySelector('.msg').classList.add('loading');
 
   try{
     const res = await fetch(
@@ -311,7 +399,7 @@ async function sendMessage(e){
       }
     );
     const data = await res.json();
-    loadingMsg.remove();
+    loadingRow.remove();
 
     if(data.error){
       addMessage('Error: ' + data.error.message, 'ai');
@@ -323,7 +411,7 @@ async function sendMessage(e){
     history.push({ role: 'model', parts: [{ text: reply }] });
 
   }catch(err){
-    loadingMsg.remove();
+    loadingRow.remove();
     addMessage('Network error. Please check your internet connection and try again.', 'ai');
   }finally{
     sendBtn.disabled = false;
