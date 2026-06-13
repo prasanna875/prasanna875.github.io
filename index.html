@@ -82,13 +82,62 @@
     box-shadow: 1px 2px 4px rgba(0,0,0,0.05);
   }
   .msg.ai.loading{ color: var(--muted); font-style: italic; }
+
+  .msg img{
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    display:block;
+  }
+
+  #preview-bar{
+    display:none;
+    align-items:center;
+    gap:10px;
+    padding: 10px 16px 0;
+    background: var(--paper);
+  }
+  #preview-bar.show{ display:flex; }
+  #preview-bar img{
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--rule);
+  }
+  #preview-bar .remove-img{
+    background: var(--rule);
+    border:none;
+    border-radius:50%;
+    width:24px;
+    height:24px;
+    font-size:14px;
+    cursor:pointer;
+    color: var(--ink);
+  }
+
   form{
     display:flex;
-    gap:10px;
+    align-items:flex-end;
+    gap:8px;
     padding: 14px 16px;
     background: var(--paper);
     border-top: 1px solid var(--rule);
   }
+  .attach-btn{
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    width: 46px;
+    height: 46px;
+    font-size: 20px;
+    cursor: pointer;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .attach-btn:hover{ background: var(--rule); }
   textarea{
     flex:1;
     resize:none;
@@ -113,6 +162,7 @@
   }
   button.send:hover{ background:#d6912e; }
   button.send:disabled{ opacity:0.6; cursor:default; }
+
   .hint{
     text-align:center;
     color: var(--muted);
@@ -132,8 +182,16 @@
   <div class="hint">Ask me anything — studies, life, feelings. Likho Hindi, Bengali ya English mein, jaise comfortable ho. 😊</div>
 </main>
 
+<div id="preview-bar">
+  <img id="preview-img" src="" alt="preview">
+  <button type="button" class="remove-img" onclick="removeImage()">✕</button>
+  <span style="font-size:13px;color:var(--muted)">Photo attached</span>
+</div>
+
 <form id="form" onsubmit="sendMessage(event)">
-  <textarea id="input" placeholder="Type your question here..." required></textarea>
+  <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
+  <button type="button" class="attach-btn" onclick="document.getElementById('imageInput').click()" title="Add photo">📷</button>
+  <textarea id="input" placeholder="Type your question, or attach a photo..." ></textarea>
   <button class="send" type="submit" id="sendBtn">Send</button>
 </form>
 
@@ -147,30 +205,73 @@ Rules you always follow:
 - For study questions: break down the explanation step by step, like a patient teacher.
 - For emotional or personal problems: be kind, supportive, and non-judgmental. Don't lecture. Validate feelings first, then gently offer practical, simple suggestions.
 - Keep answers focused and not too long — clear and easy to read, not overwhelming.
-- Be encouraging and friendly, like a helpful older sibling or favorite teacher.`;
+- Be encouraging and friendly, like a helpful older sibling or favorite teacher.
+- If the user sends a photo (e.g. of a textbook question, homework, diagram, or handwritten notes), read it carefully and explain or solve it in simple language, step by step.`;
 
 const WORKER_URL = "https://summer-dew-ffcb.prasanogiri185.workers.dev";
 let history = [];
+let selectedImage = null; // { mimeType, base64 }
 
-function addMessage(text, role){
+function addMessage(text, role, imageDataUrl){
   const chat = document.getElementById('chat');
   const div = document.createElement('div');
   div.className = 'msg ' + role;
-  div.textContent = text;
+  if(imageDataUrl){
+    const img = document.createElement('img');
+    img.src = imageDataUrl;
+    div.appendChild(img);
+  }
+  if(text){
+    const span = document.createElement('span');
+    span.textContent = text;
+    div.appendChild(span);
+  }
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
   return div;
+}
+
+function handleImageSelect(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    selectedImage = { mimeType: file.type, base64, dataUrl };
+
+    document.getElementById('preview-img').src = dataUrl;
+    document.getElementById('preview-bar').classList.add('show');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(){
+  selectedImage = null;
+  document.getElementById('imageInput').value = '';
+  document.getElementById('preview-bar').classList.remove('show');
 }
 
 async function sendMessage(e){
   e.preventDefault();
   const input = document.getElementById('input');
   const text = input.value.trim();
-  if(!text) return;
+  if(!text && !selectedImage) return;
 
-  addMessage(text, 'user');
-  history.push({ role: 'user', parts: [{ text }] });
+  const parts = [];
+  if(selectedImage){
+    parts.push({ inline_data: { mime_type: selectedImage.mimeType, data: selectedImage.base64 } });
+  }
+  if(text){
+    parts.push({ text });
+  }
+
+  addMessage(text, 'user', selectedImage ? selectedImage.dataUrl : null);
+  history.push({ role: 'user', parts });
+
   input.value = '';
+  removeImage();
 
   const sendBtn = document.getElementById('sendBtn');
   sendBtn.disabled = true;
