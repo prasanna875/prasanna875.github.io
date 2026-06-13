@@ -98,12 +98,19 @@
     background: var(--paper);
   }
   #preview-bar.show{ display:flex; }
-  #preview-bar img{
+  #preview-bar img, #preview-bar .file-icon{
     width: 56px;
     height: 56px;
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid var(--rule);
+  }
+  #preview-bar .file-icon{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 24px;
+    background: var(--bg);
   }
   #preview-bar .remove-img{
     background: var(--rule);
@@ -183,14 +190,15 @@
 </main>
 
 <div id="preview-bar">
-  <img id="preview-img" src="" alt="preview">
+  <img id="preview-img" src="" alt="preview" style="display:none">
+  <div id="preview-file" class="file-icon" style="display:none">📄</div>
   <button type="button" class="remove-img" onclick="removeImage()">✕</button>
-  <span style="font-size:13px;color:var(--muted)">Photo attached</span>
+  <span id="preview-name" style="font-size:13px;color:var(--muted)">Attached</span>
 </div>
 
 <form id="form" onsubmit="sendMessage(event)">
-  <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
-  <button type="button" class="attach-btn" onclick="document.getElementById('imageInput').click()" title="Add photo">📷</button>
+  <input type="file" id="imageInput" accept="image/*,.pdf,application/pdf" style="display:none" onchange="handleImageSelect(event)">
+  <button type="button" class="attach-btn" onclick="document.getElementById('imageInput').click()" title="Add photo or PDF">📎</button>
   <textarea id="input" placeholder="Type your question, or attach a photo..." ></textarea>
   <button class="send" type="submit" id="sendBtn">Send</button>
 </form>
@@ -239,9 +247,18 @@ function handleImageSelect(event){
   reader.onload = function(e){
     const dataUrl = e.target.result;
     const base64 = dataUrl.split(',')[1];
-    selectedImage = { mimeType: file.type, base64, dataUrl };
+    selectedImage = { mimeType: file.type, base64, dataUrl, name: file.name, isImage: file.type.startsWith('image/') };
 
-    document.getElementById('preview-img').src = dataUrl;
+    if(selectedImage.isImage){
+      document.getElementById('preview-img').src = dataUrl;
+      document.getElementById('preview-img').style.display = 'block';
+      document.getElementById('preview-file').style.display = 'none';
+      document.getElementById('preview-name').textContent = 'Photo attached';
+    } else {
+      document.getElementById('preview-img').style.display = 'none';
+      document.getElementById('preview-file').style.display = 'flex';
+      document.getElementById('preview-name').textContent = file.name;
+    }
     document.getElementById('preview-bar').classList.add('show');
   };
   reader.readAsDataURL(file);
@@ -267,7 +284,11 @@ async function sendMessage(e){
     parts.push({ text });
   }
 
-  addMessage(text, 'user', selectedImage ? selectedImage.dataUrl : null);
+  const displayText = selectedImage && !selectedImage.isImage
+    ? `📄 ${selectedImage.name}${text ? '\n' + text : ''}`
+    : text;
+
+  addMessage(displayText, 'user', (selectedImage && selectedImage.isImage) ? selectedImage.dataUrl : null);
   history.push({ role: 'user', parts });
 
   input.value = '';
